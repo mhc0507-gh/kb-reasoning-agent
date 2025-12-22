@@ -62,7 +62,7 @@ class DiagnosticKB:
             print(f"Error adding documents to collection: {str(e)}")
 
 
-    def query_rag(self, query, n_results=2):
+    def query_rag(self, query, n_results=1):
         """Query the RAG system to retrieve relevant documents"""
         try:
             # Generate query embedding

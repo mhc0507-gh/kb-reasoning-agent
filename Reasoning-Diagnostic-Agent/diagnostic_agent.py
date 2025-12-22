@@ -13,14 +13,21 @@ from langgraph.prebuilt import create_react_agent
 
 from tool_trace import ToolTrace
 
-model = "gpt-oss:20b"
+gpt_model = { "name": "gpt-oss:20b", "reasoning": True }
+granite_model = { "name": "granite4:32b-a9b-h", "reasoning": False }
 
-llm = ChatOllama(
-    model=model,
-    reasoning=True,
-    disable_streaming=True,
-    verbose=True
-    )
+def get_llm(name: str|None) -> ChatOllama:
+    selected_model = gpt_model  # default to gpt_model
+    if name == "granite":
+        selected_model = granite_model
+
+    return ChatOllama(
+        model=selected_model["name"],
+        reasoning=selected_model["reasoning"],
+        disable_streaming=True,
+        verbose=True
+        )
+
 
 def get_llm_prompt(query: str) -> str:
     return f"""
@@ -39,7 +46,7 @@ def get_llm_prompt(query: str) -> str:
     Query: {query}
     """
 
-async def query_agent(prompt: str, log_level=ToolTrace.NORMAL) -> str:
+async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NORMAL) -> str:
     # MCP server that runs locally communicating through STDIO
     mcp_local_server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "MCP_local_server.py"))
     print(f"MCP local server path: {mcp_local_server_path}")
@@ -69,6 +76,7 @@ async def query_agent(prompt: str, log_level=ToolTrace.NORMAL) -> str:
                         mcp_server_tools = await load_mcp_tools(http_session)
                         mcp_server_tools += await load_mcp_tools(stdio_session)
 
+                        llm = get_llm(model)
                         llm_prompt = get_llm_prompt(prompt)
 
                         print("\nTools loaded :")

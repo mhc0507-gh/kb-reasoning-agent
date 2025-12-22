@@ -77,6 +77,11 @@ The PoC has been tested and runs completely local on the following hardware conf
 - **Ollama**: Installed and running with compatible open-source models
 - **Operating System**: Windows 11 (tested), or compatible Windows/Linux/macOS system
 
+### Models Tested
+
+- **Open AI gpt-oss**: gpt-oss:20b
+- **IBM Granite 4.0**: granite4:32b-a9b-h
+
 ## Getting Started
 
 1. Navigate to the project directory:
