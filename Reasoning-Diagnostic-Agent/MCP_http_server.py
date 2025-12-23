@@ -29,6 +29,15 @@ class DeploymentInfo:
     role_instances_count: int
     subscription_id: UUID
 
+@dataclass
+class ErrorInfo:
+    type: str
+    message: str
+
+@dataclass
+class ErrorResponse:
+    error: ErrorInfo
+
 # -------------------------------
 # Tools
 # -------------------------------
@@ -55,46 +64,79 @@ def query_link_status(query: str) -> dict:
     return response
 
 @mcp_http_server.tool()
-def query_high_latency_request_percentage(service_id: str, time_window: int) -> dict:
+def query_high_latency_request_percentage(service_id: str, time_window: int) -> dict | ErrorResponse:
     """Reports the percentage of high latency requests on {service-id} in the last {time_window} hours"""
 
-    return { "high_latency_requests_percent": 98 }
+    if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
+        return { "high_latency_requests_percent": 98 }
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="service_id not found"))
 
 @mcp_http_server.tool()
-def query_average_request_latencies(service_id: str, time_window: int) -> RequestLatencies:
+def query_average_request_latencies(service_id: str, time_window: int) -> RequestLatencies | ErrorResponse:
     """Reports average request latencies on {service-id} in the last {time_window} hours """
-    return RequestLatencies(
-        storage_latency_ms=10,
-        server_latency_ms=500,
-        end_to_end_latency_ms=2000)
+
+    if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
+        return RequestLatencies(
+            storage_latency_ms=10,
+            server_latency_ms=500,
+            end_to_end_latency_ms=2000)
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="service_id not found"))
 
 @mcp_http_server.tool()
-def query_service_info(service_id: str) -> ServiceInfo:
+def query_service_info(service_id: str) -> ServiceInfo | ErrorResponse:
     """Reports information on {service-id} """
-    return ServiceInfo(
-        service_type="shared origin",
-        account_id=uuid.UUID("a1d4c6f7-3e2b-4b9a-bc8f-9f6e2a1d7c3e"),
-        deployment_id=uuid.UUID("f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f"))
+
+    if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
+        return ServiceInfo(
+            service_type="shared origin",
+            account_id=uuid.UUID("a1d4c6f7-3e2b-4b9a-bc8f-9f6e2a1d7c3e"),
+            deployment_id=uuid.UUID("f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f"))
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="service_id not found"))
 
 @mcp_http_server.tool()
-def query_deployment_info(deployment_id: str) -> DeploymentInfo:
+def query_deployment_info(deployment_id: str) -> DeploymentInfo | ErrorResponse:
     """Reports information on {deployment_id}"""
-    return DeploymentInfo(
-        vm_type="Standard_D16_v5",
-        role_instances_count=2,
-        subscription_id=uuid.UUID("c7e2b9f1-4d3a-4a8e-9f6c-2b1d7e3f9a4c"))
+
+    if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
+        return DeploymentInfo(
+            vm_type="Standard_D16_v5",
+            role_instances_count=2,
+            subscription_id=uuid.UUID("c7e2b9f1-4d3a-4a8e-9f6c-2b1d7e3f9a4c"))
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="deployment_id not found"))
 
 @mcp_http_server.tool()
-def query_average_cpu_load(deployment_id: str, time_window: int) -> dict:
+def query_average_cpu_load(deployment_id: str, time_window: int) -> dict | ErrorResponse:
     """Reports the average CPU load on {deployment-id} in the last {time_window} hours"""
 
-    return { "average_cpu_load_percent": 98 }
+    if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
+        return { "average_cpu_load_percent": 98 }
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="deployment_id not found"))
 
 @mcp_http_server.tool()
-def query_average_requests_per_sec(deployment_id: str, time_window: int) -> dict:
+def query_average_requests_per_sec(deployment_id: str, time_window: int) -> dict | ErrorResponse:
     """Reports the average requests per second on {deployment-id} in the last {time_window} hours"""
 
-    return { "average_requests_per_second": 500 }
+    if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
+        return { "average_requests_per_second": 500 }
+
+    return ErrorResponse(ErrorInfo(
+        type="invalid parameter",
+        message="deployment_id not found"))
 
 
 # -------------------------------

@@ -102,15 +102,23 @@ async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NOR
 
 if __name__ == "__main__":
 
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model")
+    parser.add_argument("--verbose", action="store_true")
+
+    args = parser.parse_args()
+
     log_level = ToolTrace.NORMAL
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "-verbose":
-            log_level = ToolTrace.VERBOSE
+    if args.verbose:
+        log_level = ToolTrace.VERBOSE
 
     print("\nRunning Query Agent...")
     response = asyncio.run(
         query_agent(
             prompt="What is the cause of alert 'Origin service d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e with high latency on more than 90% of requests in the last hour'",
+            model=args.model,
             log_level=log_level)
         )
 
