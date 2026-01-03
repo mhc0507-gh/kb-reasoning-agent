@@ -1,11 +1,13 @@
-from typing import Any, TypedDict, Annotated
+from typing import TypedDict, Annotated
 from uuid import uuid4
 
-from a2a.client import A2ACardResolver, A2AClient
+from a2a.client import A2ACardResolver, ClientFactory, ClientConfig
 from a2a.types import (
     AgentCard,
-    MessageSendParams,
-    SendMessageRequest,
+    Message,
+    Part,
+    Role,
+    TextPart
 )
 
 from langgraph.graph import StateGraph, END
@@ -49,32 +51,46 @@ async def execute_a2a_agent(agent_card_url: str,
                 'Failed to fetch the public agent card. Cannot continue.'
             ) from e
 
-        client = A2AClient(httpx_client=httpx_client, agent_card=final_agent_card_to_use)
+        config = ClientConfig(httpx_client=httpx_client)
+        client_factory = ClientFactory(config)
+        client = client_factory.create(card=final_agent_card_to_use)
+
         print("A2AClient initialized.")
 
         input_dict = {"user": user, "prompt": prompt, "log_level": log_level}
 
-        send_message_payload: dict[str, Any] = {
-            'message': {
-                'role': 'user',
-                'parts': [
-                    {'kind': 'text', 'text': json.dumps(input_dict)}
-                ],
-                'messageId': uuid4().hex,
-            },
-        }
+        message = Message(
+            role=Role("user"),
+            parts=[
+                Part(TextPart(text=json.dumps(input_dict)))
+            ],
+            message_id=uuid4().hex,
+        )
 
         print("prompting agent")
-        request = SendMessageRequest(
-            id=str(uuid4()),
-            params=MessageSendParams(**send_message_payload)
-        )
-        response = await client.send_message(request)
+        # Streaming is enabled, iterate through response
+        response = None
+        async for chunk in client.send_message(message):
+            response = chunk  # Keep the last chunk as the final response
 
-        # Extract text from the response object
-        response_json = response.model_dump(mode='json', exclude_none=True)
-        text = response_json.get("result").get("parts")[0].get("text")
-        return text
+        if response is None:
+            raise RuntimeError("No response received from agent")
+
+        # Extract text from the response Message object
+        if not isinstance(response, Message):
+            raise RuntimeError("Response is not a message")
+        if not response.parts or len(response.parts) == 0:
+            raise RuntimeError("Response message has no parts")
+
+        # Get the first part and extract text from TextPart
+        first_part = response.parts[0]
+        if isinstance(first_part.root, TextPart):
+            if hasattr(first_part.root, 'text') and first_part.root.text is not None:
+                return first_part.root.text
+            else:
+                raise RuntimeError("Part does not have a text attribute")
+        else:
+            raise RuntimeError(f"Unexpected part type: {type(first_part)}")
 
 
 class DiagnosticAgentState(TypedDict):
