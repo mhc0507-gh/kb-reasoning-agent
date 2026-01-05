@@ -129,21 +129,50 @@ class DiagnosticAgent:
         elapsed_time = end_time - start_time
         print(f"Elapsed time for execute_a2a_agent: {elapsed_time:.2f} seconds")
 
-        return {"messages": [AIMessage(content=response)]}
+        return {"messages": [AIMessage(content=[{"Diagnostic_elapsed_time":elapsed_time}, response])]}
 
     def response_agent_node(self, state: DiagnosticAgentState):
         messages = state["messages"]
 
-        # Get similarity score between response and reference
-        ai_contents = [msg.text() for msg in messages if isinstance(msg, AIMessage)][0]
+        # Get diagnostic elapsed time and AI contents
+        diagnostic_elapsed_time = 0
+        ai_contents = ""
+        if messages and isinstance(messages[1], AIMessage):
+            content = messages[1].content
+            if isinstance(content, list):
+                if len(content) > 0 and isinstance(content[0], dict):
+                    diagnostic_elapsed_time = int(content[0].get("Diagnostic_elapsed_time", 0))
+                if len(content) > 1 and isinstance(content[1], str):
+                    ai_contents = content[1]
 
-        LLM_similarity_score = asyncio.run(response_agent.compare_agent_LLM(ai_contents, self.reference_response))
-        print(f"🤖 Response agent node LLM similarity score: {LLM_similarity_score}")
+        # Get similarity score between response and reference
+        LLM_similarity_result = asyncio.run(response_agent.compare_agent_LLM(ai_contents, self.reference_response))
+        print(f"🤖 Response agent node LLM similarity result: {LLM_similarity_result}")
+
+        # Ensure LLM_similarity_result ends with }
+        LLM_similarity_result = LLM_similarity_result.strip()
+        if not LLM_similarity_result.endswith('}'):
+            LLM_similarity_result += '}'
+
+        # Parse similarity score from JSON response
+        LLM_similarity_score: int = 0
+        try:
+            data = json.loads(LLM_similarity_result)
+            parsed_score = data.get("score")
+            if not isinstance(parsed_score, int):
+                print(f"Error: LLM score is not an integer")
+            else:
+                LLM_similarity_score = parsed_score
+        except json.JSONDecodeError:
+            print(f"Failed to parse LLM_similarity_result JSON")
 
         ST_similarity_score = asyncio.run(response_agent.compare_agent_ST(ai_contents, self.reference_response))
         print(f"🤖 Response agent node ST similarity score: {ST_similarity_score}")
 
-        return {"messages": [AIMessage(content=LLM_similarity_score)]}
+        return {"messages": [AIMessage(content=[
+            {"Diagnostic_elapsed_time":diagnostic_elapsed_time},
+            {"LLM_similarity_score":LLM_similarity_score},
+            {"ST_similarity_score":ST_similarity_score}])]}
 
 
 if __name__ == '__main__':
