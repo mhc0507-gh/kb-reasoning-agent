@@ -177,6 +177,15 @@ class DiagnosticAgent:
 
 if __name__ == '__main__':
 
+    from stats import print_stats
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--iterations", default="1")
+
+    args = parser.parse_args()
+
     reference_response = """
         The alert is triggered because the origin service is over-loaded with too many requests, which is causing CPU saturation and, in turn, high latency:
 
@@ -191,6 +200,21 @@ if __name__ == '__main__':
     diag_prompt = "What is the cause of alert 'Origin service d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e with high latency on more than 90% of requests in the last hour'"
     user_message: DiagnosticAgentState = {"messages": [HumanMessage(diag_prompt)]}
 
-    ai_response = diag_agent.diag_graph.invoke(user_message)
+    elapsed_time = []
+    scores_llm = []
+    scores_st = []
 
-    print(f"\nAGENT: {ai_response["messages"][-1].content}")
+    for i in range(int(args.iterations)):
+        ai_response = diag_agent.diag_graph.invoke(user_message)
+
+        print(f"\nAGENT: {ai_response["messages"][-1].content}")
+
+        response_data = ai_response["messages"][-1].content
+        elapsed_time.append(response_data[0].get("Diagnostic_elapsed_time"))
+        scores_llm.append(response_data[1].get("LLM_similarity_score"))
+        scores_st.append(response_data[2].get("ST_similarity_score"))
+
+    print_stats(["Diagnostic_elapsed_time",
+                 "LLM_similarity_score",
+                 "ST_similarity_score"],
+                [elapsed_time, scores_llm, scores_st])
