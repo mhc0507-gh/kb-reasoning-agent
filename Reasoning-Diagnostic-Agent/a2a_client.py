@@ -204,17 +204,18 @@ if __name__ == '__main__':
     scores_llm = []
     scores_st = []
 
-    for i in range(int(args.iterations)):
+    iterations = int(args.iterations)
+    for i in range(1, iterations+1):
         ai_response = diag_agent.diag_graph.invoke(user_message)
 
-        print(f"\nAGENT: {ai_response["messages"][-1].content}")
+        print(f"\nAGENT #{i}: {ai_response["messages"][-1].content}")
 
         response_data = ai_response["messages"][-1].content
         elapsed_time.append(response_data[0].get("Diagnostic_elapsed_time"))
         scores_llm.append(response_data[1].get("LLM_similarity_score"))
         scores_st.append(response_data[2].get("ST_similarity_score"))
 
-    print_stats(["Diagnostic_elapsed_time",
+    print_stats(["Diagnostic_elapsed_time (s)",
                  "LLM_similarity_score",
                  "ST_similarity_score"],
                 [elapsed_time, scores_llm, scores_st])
