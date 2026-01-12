@@ -26,6 +26,7 @@ from tool_trace import ToolTrace
 async def execute_a2a_agent(agent_card_url: str,
                             user: str,
                             prompt: str | list[str | dict],
+                            model: str | None = None,
                             log_level=ToolTrace.NORMAL) -> str:
 
     print("Retrieving agent card at ", agent_card_url)
@@ -57,7 +58,7 @@ async def execute_a2a_agent(agent_card_url: str,
 
         print("A2AClient initialized.")
 
-        input_dict = {"user": user, "prompt": prompt, "log_level": log_level}
+        input_dict = {"user": user, "prompt": prompt, "model": model, "log_level": log_level}
 
         message = Message(
             role=Role("user"),
@@ -98,7 +99,8 @@ class DiagnosticAgentState(TypedDict):
 
 class DiagnosticAgent:
 
-    def __init__(self, reference_response: str) -> None:
+    def __init__(self, model: str, reference_response: str) -> None:
+        self.model = model
         self.reference_response = reference_response
 
         diag_graph = StateGraph(DiagnosticAgentState)
@@ -123,6 +125,7 @@ class DiagnosticAgent:
             agent_card_url="http://localhost:9001/",
             user="",
             prompt=prompt,
+            model=self.model,
             log_level=ToolTrace.VERBOSE
         ))
         end_time = time.time()
@@ -183,6 +186,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--iterations", default="1")
+    parser.add_argument("--model", default=None)
 
     args = parser.parse_args()
 
@@ -195,7 +199,7 @@ if __name__ == '__main__':
         Because the CPU is saturated, the service cannot process requests quickly, leading to the observed high latency on more than 90% of requests.
     """
 
-    diag_agent = DiagnosticAgent(reference_response)
+    diag_agent = DiagnosticAgent(args.model, reference_response)
 
     diag_prompt = "What is the cause of alert 'Origin service d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e with high latency on more than 90% of requests in the last hour'"
     user_message: DiagnosticAgentState = {"messages": [HumanMessage(diag_prompt)]}

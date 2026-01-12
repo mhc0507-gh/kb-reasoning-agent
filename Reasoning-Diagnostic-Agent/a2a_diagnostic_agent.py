@@ -27,10 +27,12 @@ class DiagnosticAgentExecutor(AgentExecutor):
         event_queue: EventQueue,) -> None:
 
         user_input = json.loads(context.get_user_input())
+        print("model: ", user_input.get("model"))
         print("prompt received: ", user_input.get("prompt"))
         # Call the diagnostic agent function
         result = await diagnostic_agent.query_agent(
                         prompt=user_input.get("prompt"),
+                        model=user_input.get("model"),
                         log_level=user_input.get("log_level"))
 
         print("Result received: ", result)
