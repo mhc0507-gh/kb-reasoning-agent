@@ -23,6 +23,31 @@ import response_agent
 
 from tool_trace import ToolTrace
 
+def extract_json_object(s: str) -> str:
+    """Extract and repair the outermost JSON object from a string.
+
+    Returns the extracted JSON object text if found or repaired; otherwise returns
+    the original stripped string to let the caller handle parsing failures.
+    """
+    raw = s.strip()
+    first = raw.find('{')
+    last = raw.rfind('}')
+    if first != -1 and last != -1 and first < last:
+        json_text = raw[first:last+1]
+        if json_text != raw:
+            print("⚠️ Trimmed non-JSON text from LLM_similarity_result")
+        return json_text
+    elif first != -1 and last == -1:
+        json_text = raw[first:] + '}'
+        print("⚠️ Appended missing '}' to LLM_similarity_result")
+        return json_text
+    elif first == -1 and last != -1:
+        json_text = '{' + raw[:last+1]
+        print("⚠️ Prepended missing '{' to LLM_similarity_result")
+        return json_text
+    else:
+        return raw
+
 async def execute_a2a_agent(agent_card_url: str,
                             user: str,
                             prompt: str | list[str | dict],
@@ -152,15 +177,13 @@ class DiagnosticAgent:
         LLM_similarity_result = asyncio.run(response_agent.compare_agent_LLM(ai_contents, self.reference_response))
         print(f"🤖 Response agent node LLM similarity result: {LLM_similarity_result}")
 
-        # Ensure LLM_similarity_result ends with }
-        LLM_similarity_result = LLM_similarity_result.strip()
-        if not LLM_similarity_result.endswith('}'):
-            LLM_similarity_result += '}'
+        # Normalize and extract the JSON object
+        json_text = extract_json_object(LLM_similarity_result)
 
         # Parse similarity score from JSON response
         LLM_similarity_score: int = 0
         try:
-            data = json.loads(LLM_similarity_result)
+            data = json.loads(json_text)
             parsed_score = data.get("score")
             if not isinstance(parsed_score, int):
                 print(f"Error: LLM score is not an integer")
@@ -191,12 +214,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     reference_response = """
-        The alert is triggered because the origin service is over-loaded with too many requests, which is causing CPU saturation and, in turn, high latency:
+        The alert is triggered because the origin service is over-loaded with too many requests,
+        which is causing CPU saturation and, as a result, high latency:
 
-        * The origin service is running on a deployment where the average CPU load is 98% over the last hour.
-        * This high CPU usage is due to the deployment receiving ≈500 requests/s while it has only 2 role instances, which results in ≈250 requests/s per instance—well above the 100 requests/s threshold.
+        * The threshold for normal operation is 100 requests/s per role instance in a deployment.
+        * The deployment is receiving ≈500 requests/s.
+        * The deployment has 2 role instances, which results in ≈250 requests/s per role instance.
+        * The average CPU load in the deployment is 98% over the last hour.
 
-        Because the CPU is saturated, the service cannot process requests quickly, leading to the observed high latency on more than 90% of requests.
+        Because the rate of requests is above the deployment capacity, the CPU is saturated, and
+        the service cannot process requests quickly, leading to the observed high latency on more
+        than 90% of requests.
     """
 
     diag_agent = DiagnosticAgent(args.model, reference_response)
@@ -208,8 +236,10 @@ if __name__ == '__main__':
     scores_llm = []
     scores_st = []
 
+    start_time = time.time()
     iterations = int(args.iterations)
     for i in range(1, iterations+1):
+        print("----------------------------------------")
         ai_response = diag_agent.diag_graph.invoke(user_message)
 
         print(f"\nAGENT #{i}: {ai_response["messages"][-1].content}")
@@ -219,7 +249,13 @@ if __name__ == '__main__':
         scores_llm.append(response_data[1].get("LLM_similarity_score"))
         scores_st.append(response_data[2].get("ST_similarity_score"))
 
+    end_time = time.time()
+    total_elapsed_time = (end_time - start_time)/60
+
+    print("----------------------------------------")
     print_stats(["Diagnostic_elapsed_time (s)",
                  "LLM_similarity_score",
                  "ST_similarity_score"],
                 [elapsed_time, scores_llm, scores_st])
+
+    print(f"\nTotal elapsed time: {total_elapsed_time:.1f} minutes")
