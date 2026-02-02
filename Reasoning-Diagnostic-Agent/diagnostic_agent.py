@@ -17,9 +17,13 @@ gpt_model = { "name": "gpt-oss:20b", "reasoning": True }
 granite_model = { "name": "granite4:32b-a9b-h", "reasoning": False }
 
 def get_llm(name: str|None) -> ChatOllama:
-    selected_model = gpt_model  # default to gpt_model
-    if name == "granite":
-        selected_model = granite_model
+    match name:
+        case "gpt-oss:20b":
+            selected_model = gpt_model
+        case "granite4:32b-a9b-h":
+            selected_model = granite_model
+        case _:
+            selected_model = gpt_model
 
     return ChatOllama(
         model=selected_model["name"],

@@ -173,24 +173,39 @@ class DiagnosticAgent:
                 if len(content) > 1 and isinstance(content[1], str):
                     ai_contents = content[1]
 
-        # Get similarity score between response and reference
-        LLM_similarity_result = asyncio.run(response_agent.compare_agent_LLM(ai_contents, self.reference_response))
-        print(f"🤖 Response agent node LLM similarity result: {LLM_similarity_result}")
-
-        # Normalize and extract the JSON object
-        json_text = extract_json_object(LLM_similarity_result)
-
-        # Parse similarity score from JSON response
+        # Get similarity score between response and reference and retry if needed
+        MAX_RETRIES = 3
+        attempt = 1
         LLM_similarity_score: int = 0
-        try:
-            data = json.loads(json_text)
-            parsed_score = data.get("score")
-            if not isinstance(parsed_score, int):
-                print(f"Error: LLM score is not an integer")
-            else:
-                LLM_similarity_score = parsed_score
-        except json.JSONDecodeError:
-            print(f"Failed to parse LLM_similarity_result JSON")
+        last_parse_error: str | None = None
+
+        while attempt <= MAX_RETRIES:
+            LLM_similarity_result = asyncio.run(response_agent.compare_agent_LLM(ai_contents, self.reference_response, self.model))
+            print(f"🤖 Response agent node LLM similarity result: {LLM_similarity_result}")
+
+            # Normalize and extract the JSON object
+            json_text = extract_json_object(LLM_similarity_result)
+
+            try:
+                data = json.loads(json_text)
+                parsed_score = data.get("score")
+                if isinstance(parsed_score, int):
+                    LLM_similarity_score = parsed_score
+                    break
+                else:
+                    last_parse_error = f"Error: LLM score is not an integer: {parsed_score} (type={type(parsed_score)})"
+                    print(f"Attempt {attempt}: {last_parse_error}")
+            except json.JSONDecodeError as e:
+                last_parse_error = f"JSON decode error: {e}"
+                print(f"Attempt {attempt}: Failed to parse LLM_similarity_result JSON: {e}")
+            except Exception as e:
+                last_parse_error = f"Exception during LLM evaluation: {e}"
+                print(f"Attempt {attempt}: Exception calling LLM evaluator: {e}")
+
+            attempt += 1
+
+        if LLM_similarity_score == 0 and last_parse_error:
+            print(f"Failed to obtain integer LLM score after {MAX_RETRIES} attempts: {last_parse_error}")
 
         ST_similarity_score = asyncio.run(response_agent.compare_agent_ST(ai_contents, self.reference_response))
         print(f"🤖 Response agent node ST similarity score: {ST_similarity_score}")

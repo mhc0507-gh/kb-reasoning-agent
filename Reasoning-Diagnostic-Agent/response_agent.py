@@ -1,9 +1,6 @@
 from langchain_ollama import ChatOllama
 from sentence_transformers import SentenceTransformer, util
 
-model = "gpt-oss:20b"
-
-response_formatter_prompt = "You are a helpful assistant. Summarize the message into one sentence."
 
 def get_similarity_evaluator_prompt(generated: str, reference: str) -> str:
     return f"""
@@ -127,24 +124,8 @@ REFERENCE string:
 "{reference}"
     """
 
-llm = ChatOllama(
-    model=model,
-    verbose=True
-    )
 
-async def query_agent(prompt: str) -> str:
-    print("Formatting response")
-
-    messages = [("system", response_formatter_prompt),
-                ("human", prompt)
-    ]
-
-    response = llm.invoke(messages)
-
-    return response.text()
-
-
-async def compare_agent_LLM(response: str, reference_response: str) -> str:
+async def compare_agent_LLM(response: str, reference_response: str, model:str) -> str:
     print("🤖 Evaluating similarity with LLM")
     print("    Response")
     print("    --------")
@@ -154,6 +135,11 @@ async def compare_agent_LLM(response: str, reference_response: str) -> str:
     print(reference_response)
 
     messages = [("human", get_similarity_evaluator_prompt(response, reference_response))]
+
+    llm = ChatOllama(
+        model=model,
+        verbose=True
+        )
 
     similarity_response = llm.invoke(messages)
 
@@ -199,6 +185,6 @@ if __name__ == "__main__":
     """
 
     # Run the LLM evaluator and print the JSON result
-    result = asyncio.run(compare_agent_LLM(test, reference))
+    result = asyncio.run(compare_agent_LLM(test, reference, "gpt-oss:20b"))
     print("---- Result ----")
     print(result)
