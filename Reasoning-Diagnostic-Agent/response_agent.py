@@ -6,44 +6,46 @@ def get_similarity_evaluator_prompt(generated: str, reference: str) -> str:
     return f"""
 ### LLM evaluator prompt
 
-You are an automated **similarity evaluator**. Your job is to determine whether **all information contained in a reference string**
-is also present in a test string. You must **not** judge, critique, or alter the reference string — treat it as the authoritative
-source of facts. Evaluate **only** whether the test string contains the same information. Produce a numeric score from **0 to 100**
-and a concise list of any missing details. Follow the rules below exactly.
+You are an automated **similarity evaluator**. Your job is to determine whether **every key detail listed in a reference string**
+is present in a test string. The reference string will be a **list of key details to check** (not a free-form narrative). Treat
+the reference list as the authoritative set of facts to verify. Do **not** judge, critique, or alter the reference list. Evaluate
+**only** whether the test string contains the listed details and score based solely on those items. Produce a numeric score from
+**0 to 100** and a concise list of any missing or partially present details. Follow the rules below exactly.
 
 ---
 
 #### Task
-1. Read the **reference string** and the **test string**.
-2. Identify the distinct factual **details** in the reference string.
-3. For each detail, decide whether that detail is **present** in the test string (present = conveyed, possibly via paraphrase or equivalent form).
-4. Compute a score between 0 and 100 where **100** means every detail in the reference string is present in the test string, and **0** means none of the reference details are present.
+1. Read the **reference string** (a list of key details) and the **test string**.
+2. Parse the reference string into distinct **details** exactly as listed. Do **not** infer additional details beyond the items explicitly listed in the reference string.
+3. For each listed detail, decide whether that detail is **present** in the test string (present = conveyed, possibly via paraphrase or equivalent form).
+4. Compute a score between 0 and 100 where **100** means every listed detail is present in the test string, and **0** means none of the listed details are present.
 5. Return a JSON object with three keys:
    - **score**: integer (0-100) — the final score rounded to the nearest integer.
-   - **missing_details**: array of strings — each string is a concise description of a detail from the reference that is missing or only partially present in the test string. If none are missing, return an empty array.
+   - **missing_details**: array of strings — each string is a concise description of a listed detail that is missing or only partially present in the test string. If none are missing, return an empty array.
    - **explanation**: short string (one or two sentences) summarizing how the score was computed.
 
 ---
 
 #### Definitions and matching rules
-- **Detail**: any discrete fact, claim, or piece of information in the reference string that would be meaningful to a reader on its own (examples: named entities, dates, numeric values, relationships, actions, attributes, locations, categorical labels). Break compound sentences into separate details when they contain multiple independent facts.
-- **Present**: a detail is present if the test string **conveys the same fact**. Accept paraphrases, synonyms, and equivalent formats (e.g., "Jan 1, 2024" vs "2024-01-01", "ten" vs "10") as present when the meaning is the same.
-- **Partial presence**: if the test string contains only part of a compound detail (e.g., reference: "Alice, 35, from Seattle" — test: "Alice from Seattle"), treat the missing sub-detail ("35") as missing.
-- **Extra information** in the test string that is not in the reference string **must not** affect the score.
-- **Ambiguity**: if the test string is ambiguous about a detail (could mean the same thing but not clearly), treat that detail as **missing**.
+- **Reference list**: the reference string is a list (comma-, semicolon-, or newline-separated) of the exact key details to check. Treat each list item as one detail unless the item itself contains multiple explicit sub-details separated by a clear delimiter; in that case, treat each explicit sub-detail as a separate detail only if the reference list itself separates them.
+- **Detail**: any discrete fact, claim, or piece of information explicitly listed in the reference string (examples: named entities, dates, numeric values, relationships, actions, attributes, locations, categorical labels). Do **not** extract or invent additional details from the reference.
+- **Present**: a listed detail is present if the test string **conveys the same fact**. Accept paraphrases, synonyms, and equivalent formats (e.g., "Jan 1, 2024" vs "2024-01-01", "ten" vs "10") as present when the meaning is the same.
+- **Partial presence**: if the test string contains only part of a listed compound item (e.g., reference list item: "Alice, 35, from Seattle" and the test string has "Alice from Seattle"), treat the missing sub-detail ("35") as missing.
+- **Ambiguity**: if the test string is ambiguous about a listed detail (could mean the same thing but not clearly), treat that detail as **missing**.
 - **Named entities**: require the same referent. Different names that clearly refer to the same entity (aliases, widely known nicknames) count as present.
-- **Numbers and units**: allow equivalent numeric formats and unit conversions only if equivalence is explicit or trivially derivable (e.g., "1000 m" vs "1 km" is present). If conversion is nontrivial or ambiguous, treat as missing.
-- **Negation and polarity**: preserve polarity. If the reference asserts X and the test denies X, the detail is missing.
-- **Zero-details case**: if the reference string contains no extractable factual details, return `score: 100`, `missing_details: []`, and explanation stating no details to check.
+- **Numbers and units**: allow equivalent numeric formats and unit conversions only if equivalence is explicit or trivially derivable. If conversion is nontrivial or ambiguous, treat as missing.
+- **Negation and polarity**: preserve polarity. If the reference list asserts X and the test denies X, the detail is missing.
+- **Extra information** in the test string that is not in the reference list **must not** affect the score.
+- **Zero-details case**: if the reference string contains no extractable list items (empty or whitespace only), return `score: 100`, `missing_details: []`, and an explanation stating no details to check.
 
 ---
 
 #### Scoring method
 - Start with **base = 100**.
-- Let **N** be the number of distinct details extracted from the reference string.
+- Let **N** be the number of distinct details parsed from the reference list.
   - If **N = 0**, return score 100.
   - Otherwise compute **deduction_per_detail = 100 / N**.
-- For each detail:
+- For each listed detail:
   - If **present**, deduct **0**.
   - If **missing**, deduct **deduction_per_detail**.
   - If **partially present**, deduct **deduction_per_detail x 0.5**.
@@ -68,7 +70,7 @@ Return **only** a single JSON object (no surrounding text). Example structure:
 ```
 
 - **score** must be an integer between 0 and 100.
-- **missing_details** must list each missing or partially missing detail as a short phrase.
+- **missing_details** must list each missing or partially missing listed detail as a short phrase.
 - **explanation** must be one or two sentences describing N, how many missing/partial details, and the arithmetic that produced the score.
 
 ---
@@ -76,7 +78,7 @@ Return **only** a single JSON object (no surrounding text). Example structure:
 #### Examples with expected JSON responses
 
 **Example 1**
-Reference: `"Order #123: shipped on 2024-01-01 to Seattle, 3 items, paid."`
+Reference (list): `"order number: #123; shipped date: 2024-01-01; destination city: Seattle; item count: 3 items; payment status: paid"`
 Extracted details (N=5): order number, shipped date, destination city, item count, payment status.
 Test string lacks payment status and item count. Expected JSON response:
 
@@ -92,7 +94,7 @@ Test string lacks payment status and item count. Expected JSON response:
 ```
 
 **Example 2**
-Reference: `"Alice, 35, from Seattle"`
+Reference (list): `"name: Alice; age: 35; city: Seattle"`
 Extracted details (N=3): name, age, city.
 Test string: `"Alice from Seattle"` (age missing). Expected JSON response:
 
@@ -109,8 +111,8 @@ Test string: `"Alice from Seattle"` (age missing). Expected JSON response:
 ---
 
 #### Tone and behavior
-- Be objective and conservative: only mark a detail as present when the test string clearly conveys the same fact.
-- Do not evaluate the truthfulness of the reference string; assume it is correct.
+- Be objective and conservative: only mark a listed detail as present when the test string clearly conveys the same fact.
+- Do not evaluate the truthfulness of the reference list; assume it is correct.
 - Do not include any commentary beyond the required JSON output.
 
 ---

@@ -229,17 +229,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     reference_response = """
-        The alert is triggered because the origin service is over-loaded with too many requests,
-        which is causing CPU saturation and, as a result, high latency:
-
-        * The threshold for normal operation is 100 requests/s per role instance in a deployment.
-        * The deployment is receiving ≈500 requests/s.
-        * The deployment has 2 role instances, which results in ≈250 requests/s per role instance.
-        * The average CPU load in the deployment is 98% over the last hour.
-
-        Because the rate of requests is above the deployment capacity, the CPU is saturated, and
-        the service cannot process requests quickly, leading to the observed high latency on more
-        than 90% of requests.
+        * The origin service deployment has 2 role instances.
+        * The origin service deployment is receiving ≈500 requests/s.
+        * Each role instance is receiving ≈250 requests/s.
+        * The threshold for normal operation of the origin service is 100 requests/s per role instance.
+        * The origin service is over-loaded with too many requests
     """
 
     diag_agent = DiagnosticAgent(args.model, reference_response)
