@@ -163,7 +163,7 @@ The system can handle queries like:
 
 ## Sample Test Results
 
-Benchmark runs are recorded in **`RESULTS.md`**. Each run executes the diagnostic agent multiple times on the same high-latency alert query and evaluates outputs with the response agent’s **LLM similarity** and **Sentence-Transformer (ST) similarity** scores (0–100). Reported metrics:
+Benchmark runs are recorded in **`RESULTS.md`**. Each run executes the diagnostic agent multiple times on the same high-latency alert query and evaluates outputs with the response agent's **LLM similarity** and **Sentence-Transformer (ST) similarity** scores (0–100). Reported metrics:
 
 - **Diagnostic_elapsed_time (s)**: Time per diagnostic run.
 - **LLM_similarity_score**: Score from the LLM evaluator (key-detail coverage vs reference).
@@ -176,7 +176,7 @@ Summary from sample runs (20 iterations per model):
 | **gpt-oss:20b** | 167.10 s ± 16.12 | 76.00 ± 17.90 | 55.35 ± 4.89 | 88.3 min |
 | **granite4:32b-a9b-h** | 218.10 s ± 20.16 | 31.00 ± 16.45 | 54.15 ± 3.47 | 99.4 min |
 
-See `RESULTS.md` for per-iteration tables and full details.
+See [`RESULTS.md`](RESULTS.md) for per-iteration tables and full details.
 
 ## Project Structure
 

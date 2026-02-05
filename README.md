@@ -56,7 +56,7 @@ This PoC implements a diagnostic agent system that performs automated root cause
 - Orchestrates diagnostic workflows using LangGraph
 - Supports agent-to-agent communication via A2A protocol
 
-See the `Reasoning-Diagnostic-Agent/` subdirectory for the complete implementation.
+For detailed implementation, usage instructions, and benchmark results, see [`Reasoning-Diagnostic-Agent/README.md`](Reasoning-Diagnostic-Agent/README.md).
 
 ## System Requirements
 
@@ -119,10 +119,13 @@ python a2a_diagnostic_agent.py
 ```
 Repo/
 ├── Reasoning-Diagnostic-Agent/    # Main project implementation
+│   ├── Colab_Notebooks/           # Jupyter/Colab notebooks
+│   │   └── diagnostic_agent.ipynb # Self-contained diagnostic agent notebook
 │   ├── diagnostic_agent.py        # Core agent with ReAct pattern
 │   ├── a2a_diagnostic_agent.py     # A2A server wrapper
 │   ├── MCP_http_server.py          # MCP server with tools
 │   ├── diagnostic_kb.py            # RAG knowledge base
+│   ├── README.md                   # Detailed project documentation
 │   └── ...
 └── README.md                       # This file
 ```

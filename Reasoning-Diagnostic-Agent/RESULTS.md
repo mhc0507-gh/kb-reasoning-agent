@@ -1,5 +1,33 @@
 # Results from Test Executions
 
+## Evaluation Methodology
+
+### LLM Similarity Score
+
+The **LLM similarity score** (0–100) evaluates how well the diagnostic agent's response covers key details from a reference response. An LLM evaluator uses a structured prompt to:
+
+1. Extract key details and facts from the reference response
+2. Check whether each key detail is present or partially present in the generated response
+3. Calculate a coverage percentage based on the number of matched details
+4. Return a JSON result with:
+   - **Score**: 0–100 integer (percentage of key details found)
+   - **Missing details**: List of details absent or only partially covered
+   - **Explanation**: Brief summary of coverage analysis
+
+**Use case**: Validates whether the diagnostic output contains all essential findings and root cause information from the reference.
+
+### Sentence-Transformer (ST) Similarity Score
+
+The **Sentence-Transformer similarity score** (0–100) uses semantic embeddings to measure response similarity:
+
+1. Generates vector embeddings for both the generated and reference responses using the `all-MiniLM-L6-v2` model
+2. Computes cosine similarity between the two embeddings (range: -1 to 1)
+3. Scales the result to 0–100 (0 = completely dissimilar, 100 = identical)
+
+**Use case**: Fast, embedding-based similarity check that captures semantic meaning without requiring detailed key-point extraction.
+
+---
+
 ## gpt-oss:20b
 
 | Iteration # | Diagnostic_elapsed_time (s) | LLM_similarity_score | ST_similarity_score |
