@@ -26,10 +26,12 @@ def print_stats(labels: list[str], data):
     # Print header
     print("\nSTATS:")
     header = " | ".join([f"{iteration_label:>{col_widths[0]}}", *[f"{labels[i]:>{col_widths[i+1]}}" for i in range(len(labels))]])
+    header = "| " + header + " |"
     print(header)
 
     # Print separator
-    separator = "-+-".join("-" * col_widths[i] for i in range(len(labels)+1))
+    separator = ":|-".join("-" * col_widths[i] for i in range(len(labels)+1))
+    separator = "|-" + separator + ":|"
     print(separator)
 
     # Print rows
@@ -42,7 +44,7 @@ def print_stats(labels: list[str], data):
             else:
                 value = "N/A"
             row_data.append(f"{value:>{col_widths[col+1]}}")
-        print(" | ".join(row_data))
+        print("| " + " | ".join(row_data) + " |")
 
     if num_rows > 1:
         for col in range(len(labels)):

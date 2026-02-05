@@ -82,6 +82,11 @@ The PoC has been tested and runs completely local on the following hardware conf
 - **Open AI gpt-oss**: gpt-oss:20b
 - **IBM Granite 4.0**: granite4:32b-a9b-h
 
+#### Tested Using API Keys
+
+- **gemini-2.5-flash**
+- **llama-3.3-70b-versatile**
+
 ## Getting Started
 
 1. Navigate to the project directory:
@@ -104,6 +109,10 @@ ollama pull llama3.2
 ```bash
 python a2a_diagnostic_agent.py
 ```
+
+### Or Run Agent In Notebook
+
+> Colab_Notebooks/diagnostic_agent.ipynb
 
 ## Project Structure
 
@@ -129,6 +138,7 @@ Repo/
 - ✅ Ollama with open-source models
 - ✅ Iterative problem-solving loops
 - ✅ External data collection and evaluation
+- ✅ Test results validation through LLM
 
 ## License
 
