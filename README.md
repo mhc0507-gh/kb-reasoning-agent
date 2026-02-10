@@ -2,6 +2,66 @@
 
 Technology demonstration PoC of an **AI agent** using **LLM**-based **reasoning** to perform complex tasks: generate an execution plan from external inputs and a knowledge base, collect relevant external data via integrated tools, evaluate if the goal has been achieved, and deliver actionable conclusions—powered by **Ollama** with **open-source models**.
 
+### The Problem
+
+Cloud services generate thousands of alerts daily. Most are noisy, repetitive, or context dependent, requiring human triage and investigation. Traditional automation struggles with ambiguity, lacks adaptability, and often fails to generalize across service domains. AI agent solutions so far require frontier models (FLM) or custom training to perform diagnostic on complex systems.
+
+### Our Approach
+
+Our agent combines off-the-shelf ReAct LLM reasoning with a RAG-powered knowledge base to:
+- Interpret alert signals and infer the underlying scenario
+- Generate a step-by-step execution plan
+- Use MCP tools to collect telemetry, logs, and metrics
+- Summarize findings and optionally take action (e.g., restart service, escalate)
+
+The agent follows simple textual instructions embedded in the knowledge base — no hardcoded logic or brittle workflows.
+
+```mermaid
+graph LR
+    %% Inputs
+    A1>Automated Trigger]
+    A2>Manual Trigger]
+
+    %% Core Agent
+    B(ReAct AI Agent)
+
+    %% Downstream Components
+    C1((LLM Model))
+    C2((RAG KB))
+    C2a[(KB Txt docs)]
+    C3((MCP Server))
+    C3a[Tools]
+
+    %% Output
+    D>Output / Action]
+
+    %% Connections
+    A1 --> B
+    A2 --> B
+
+    B <--> C1
+    B <--> C2
+    B <--> C3
+
+    C2 <--> C2a
+    C3 <--> C3a
+
+    B --> D
+```
+
+### Example Scenario
+
+An alert triggers for degraded performance in an origin streaming service. The agent:
+1. Matches the alert to a known degradation pattern in the RAG corpus
+2. Interprets the text with troubleshooting description from the KB and plans steps
+3. Executes next step: uses MCP APIs to collect data from tools (e.g. Kusto)
+4. Reason whether the data collected is sufficient to determine root cause
+5. If root cause is not determined and plan has more steps, loop to #3
+6. Presents the conclusion
+
+### Why It Matters
+This PoC demonstrates how even low-cost LLMs can reason over textual instructions and operational signals, adapting fast and easily to new scenarios. Automated diagnostics can reduce manual toil and improve consistency of follow-up to automated alerts. It’s a step toward intelligent observability and self-healing systems.
+
 ## Overview
 
 This project demonstrates advanced AI agent capabilities through a multi-agent system that combines:
