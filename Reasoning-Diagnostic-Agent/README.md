@@ -143,6 +143,10 @@ python a2a_client.py
 
 Open `Colab_Notebooks/diagnostic_agent.ipynb` in Google Colab or Jupyter. Set `GOOGLE_API_KEY` and/or `GROQ_API_KEY` in your environment or a `.env` file, then run all cells. The notebook starts the MCP server in-process and runs the diagnostic agent with Gemini or Groq on the example high-latency alert query.
 
+### Running via n8n Flow
+
+You can also run the agent through n8n by importing and executing the workflow in `n8n/KB Agent.json`.
+
 ## Example Queries
 
 The system can handle queries like:
@@ -184,7 +188,9 @@ See [`RESULTS.md`](RESULTS.md) for per-iteration tables and full details.
 Reasoning-Diagnostic-Agent/
 ├── Colab_Notebooks/
 │   └── diagnostic_agent.ipynb   # Self-contained Colab/Jupyter notebook (cloud LLMs, in-process MCP + agent)
-├── MCP_http_server.py          # HTTP-based MCP server with system tools
+├── n8n/
+│   └── KB Agent.json            # n8n workflow definition for running the KB agent
+├── MCP_http_server.py           # HTTP-based MCP server with system tools
 ├── MCP_local_server.py          # Local STDIO-based MCP server with KB
 ├── diagnostic_agent.py          # Main diagnostic agent orchestrator
 ├── a2a_diagnostic_agent.py      # A2A server wrapper for diagnostic agent

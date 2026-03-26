@@ -1,0 +1,299 @@
+{
+  "name": "KB Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -128
+      ],
+      "id": "e32043c4-8d53-4b9e-a61b-b29fa8c242a9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a helpful assistant. Answer the following query\nby only using the tools provided to you. DO NOT make up any information.\n\n## Tools\nYou have access to a wide variety of tools. You may use\nthe tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools\nto complete each subtask.\n\nYou have access to the following tools:\n\nname: failure_analysis_KB\ndescription: Knowledge base for procedures on how to diagnose issues.\ninput:\n{\n  \"query\": \"string\"\n}\noutput: string listing steps for diagnosing the issue.\n\nname: query_high_latency_request_percentage\ndescription: Reports the percentage of high latency requests on {service-id} in the last {time_window} hours.\ninput format:\n{\n  \"service_id\": \"string\",\n  \"time_window\": int\n}\noutput: high latency requests percentage.\n\nname: query_average_request_latencies\ndescription: Reports average request latencies on {service-id} in the last {time_window} hours.\ninput format:\n{\n  \"service_id\": \"string\",\n  \"time_window\": int\n}\noutput: average storage, server, and end-to-end latencies.\n\nname: query_service_info\ndescription: Reports information on {service-id}.\ninput format:\n{\n  \"service_id\": \"string\"\n}\noutput: service type, account ID, deployment ID.\n\nname: query_deployment_info\ndescription: Reports information on {deployment-id}.\ninput format:\n{\n  \"deployment_id\": \"string\"\n}\noutput: VM type, role instance count, subscription ID.\n\nname: query_average_cpu_load\ndescription: Reports the average CPU load on {deployment-id} in the last {time_window} hours.\ninput format:\n{\n  \"deployment_id\": \"string\",\n  \"time_window\": int\n}\noutput: average CPU load percentage.\n\nname: query_average_requests_per_sec\ndescription: Reports the average requests per second on {deployment-id} in the last {time_window} hours.\ninput format:\n{\n  \"deployment_id\": \"string\",\n  \"time_window\": int\n}\noutput: average requests per second.\n\n## Tool parameters info\nservice_id and deployment_id are UUID strings.\nDO NOT make up UUID strings, tool input parameters must be derived from the\naccummulated information from previous steps.\n\nQuery failure analysis KB first to make a plan on how to derive the\nresponse. Then execute the plan until root cause is determined for response.\nDo not repeat tool calls with the same query.\n\nIf the result of a step in the plan indicates a new KB query is needed\nfor root causing the issue then you MUST perform the new failure analysis KB query\nand make a new plan to derive the root cause response. DO NOT finish before\nthe root cause is determined, unless the conclusion is \"unable to determine\nroot cause\".\n\nQuery: {{$json.query}}\n",
+        "options": {
+          "systemMessage": "You are an AI agent that uses a ReAct-style reasoning loop.\n\nFollow this cycle:\n\n1. Think step-by-step about what you need to do.\n2. If you need external information or must perform an operation, call one of the available tools.\n3. After receiving the tool result, evaluate whether the tool result and the current plan have enough information to reach a conclusion.\n4. If not, think again and call another tool.\n5. Continue this loop until you can provide a final answer.\n6. When you are ready to answer, respond with a final message without calling any tools.\n\nTool calling rules:\n- When calling a tool, output ONLY a JSON object with:\n  {\n    \"tool\": \"<toolName>\",\n    \"input\": { ...parameters matching the tool schema... }\n  }\n- Do not include any additional text outside the JSON.\n- Ensure the \"input\" object matches the tool's expected schema exactly.\n\nReasoning rules:\n- Think carefully before choosing a tool.\n- Use multiple tool calls if needed.\n- Use the results of previous tool calls to refine your next step.\n- Stop only when you can confidently produce the final answer.\n\nYour goal is to solve the user’s request using iterative reasoning and tool use.",
+          "maxIterations": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        -128
+      ],
+      "id": "554425e2-5774-4844-bcd6-5828c508b8c3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "c876c9ca-ad4c-42cd-a413-6ec6df924aa8",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "aUHYblbX9S088ofw",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Reports the percentage of high latency requests on {service-id} in the last {time_window} hours",
+        "jsCode": "if ($json.service_id == \"d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e\")\n{\n  return \"high_latency_requests_percent: 98\";\n}\nelse\n{\n  return \"invalid parameter: service_id not found\";\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"service_id\": \"some_value\",\n    \"time_window\": 1\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        96
+      ],
+      "id": "2d7d4470-49d7-484f-b2b0-124ecc12e843",
+      "name": "query_high_latency_request_percentage"
+    },
+    {
+      "parameters": {
+        "description": "Reports average request latencies on {service-id} in the last {time_window} hours",
+        "jsCode": "if ($json.service_id == \"d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e\")\n{\n  return \"storage_latency_ms=10, server_latency_ms=500, end_to_end_latency_ms=2000\";\n}\nelse\n{\n  return \"invalid parameter: service_id not found\";\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"service_id\": \"some_value\",\n    \"time_window\": 1\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        96
+      ],
+      "id": "a99853ff-8e20-4368-ac2f-a3e1d5e00331",
+      "name": "query_average_request_latencies"
+    },
+    {
+      "parameters": {
+        "description": "Reports information on {service-id}",
+        "jsCode": "if ($json.service_id == \"d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e\")\n{\n  return 'service_type=\"shared origin\", account_id=\"a1d4c6f7-3e2b-4b9a-bc8f-9f6e2a1d7c3e\", deployment_id=\"f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f\"';\n}\nelse\n{\n  return \"invalid parameter: service_id not found\";\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"service_id\": \"some_value\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        96
+      ],
+      "id": "726f508b-fed9-40d2-8ffe-fbf3b0c90bed",
+      "name": "query_service_info"
+    },
+    {
+      "parameters": {
+        "description": "Reports information on {deployment_id}",
+        "jsCode": "if ($json.deployment_id == \"f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f\")\n{\n  return 'm_type=\"Standard_D16_v5\", role_instances_count=2, subscription_id=\"c7e2b9f1-4d3a-4a8e-9f6c-2b1d7e3f9a4c\"';\n}\nelse\n{\n  return \"invalid parameter: deployment_id not found\";\n}\n",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"deployment_id\": \"some_value\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        912,
+        80
+      ],
+      "id": "db4af5bc-9441-4fc1-bd2b-4b175080ab96",
+      "name": "query_deployment_info"
+    },
+    {
+      "parameters": {
+        "description": "Reports the average CPU load on {deployment-id} in the last {time_window} hours",
+        "jsCode": "if ($json.deployment_id == \"f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f\")\n{\n  return \"average_cpu_load_percent: 98\";\n}\nelse\n{\n  return \"invalid parameter: deployment_id not found\";\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"deployment_id\": \"some_value\",\n    \"time_window\": 1\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        96
+      ],
+      "id": "2d139f0e-d4bd-4474-886d-ee0de6b59489",
+      "name": "query_average_cpu_load"
+    },
+    {
+      "parameters": {
+        "description": "Reports the average requests per second on {deployment-id} in the last {time_window} hours",
+        "jsCode": "if ($json.deployment_id == \"f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f\")\n{\n  return \"average_requests_per_second: 500\";\n}\nelse\n{\n  return \"invalid parameter: deployment_id not found\";\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"deployment_id\": \"some_value\",\n    \"time_window\": 1\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        1088,
+        80
+      ],
+      "id": "ac2079f8-0070-4302-b398-79361300c333",
+      "name": "query_average_requests_per_sec"
+    },
+    {
+      "parameters": {
+        "description": "Knowledge base for procedures on how to diagnose issues.",
+        "jsCode": "// Simulated KB query\n\nconst docs = [\n////////////////////////////////////////////////\n`\nTitle: Origin service {service-id} with high latency on more than 90% of requests in the last hour\nSteps:\n    1. Get percentage of requests with high latency for {service-id} in the last hour\n    2. If percentage of requests with high latency is less than 90% then report root cause as \"alert error\"\n    3. Get average end-to-end latency for {service-id} requests in the last hour\n    4. Get average server latency for {service-id} requests in the last hour\n    5a. If server latency is less than 10% of end-to-end latency then report root cause as \"high latency caused by external factors\"\n    5b. If storage latency is more than 50% of end-to-end latency then report root cause as \"high latency caused by storage\"\n    6. Get {deployment-id} where {service-id} is running\n    7. Get average CPU load of {deployment-id} in the last hour\n    8. If CPU load is above 90% then query failure analysis KB for \"High CPU usage in {deployment-id} diagnostic\" KB article to determine root cause\n    9. Otherwise report root cause as \"unable to determine cause of high latency\"`,\n////////////////////////////////////////////////\n`\nTitle: High CPU usage in {deployment-id} diagnostic\nSteps:\n    1. Get average number of requests per second for {deployment-id} in the last hour\n    2. Get number of role instances for {deployment-id}\n    3. If number of requests per second per role instance is greater than 100 then report root cause as \"system overloaded with too many requests\"\n    4. Otherwise report root cause as \"unable to determine cause of high CPU usage\"\n`\n];\n\nif ($json.query.toLowerCase().includes(\"high latency\"))\n{\n  return docs[0];\n}\nelse\n{\n  return docs[1];\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"query\": \"some_value\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        96
+      ],
+      "id": "27726cfc-0315-48ed-bb46-2e6224d92028",
+      "name": "failure_analysis_KB"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "query": "What is the cause of alert 'Origin service d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e with high latency on more than 90% of requests in the last hour'"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "query_high_latency_request_percentage": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_average_request_latencies": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_service_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_deployment_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_average_cpu_load": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_average_requests_per_sec": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "failure_analysis_KB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "saveManualExecutions": false
+  },
+  "versionId": "89cdf9a4-d759-42c2-9e7c-01f2641f485f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56cfa87ba9dbbe9cfe1bb0c420929ce7fdcd61b2e6ccf7871f5159b45113d8aa"
+  },
+  "id": "EVPT3oyThl8GHmeX",
+  "tags": []
+}

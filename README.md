@@ -174,6 +174,10 @@ python a2a_diagnostic_agent.py
 
 > Colab_Notebooks/diagnostic_agent.ipynb
 
+### Or Run Agent via n8n Flow
+
+Import and run the n8n workflow defined in `Reasoning-Diagnostic-Agent/n8n/KB Agent.json` to execute the agent through n8n.
+
 ## Project Structure
 
 ```
@@ -181,6 +185,8 @@ Repo/
 ├── Reasoning-Diagnostic-Agent/    # Main project implementation
 │   ├── Colab_Notebooks/           # Jupyter/Colab notebooks
 │   │   └── diagnostic_agent.ipynb # Self-contained diagnostic agent notebook
+│   ├── n8n/
+│   │   └── KB Agent.json          # n8n workflow to run the KB agent
 │   ├── diagnostic_agent.py        # Core agent with ReAct pattern
 │   ├── a2a_diagnostic_agent.py     # A2A server wrapper
 │   ├── MCP_http_server.py          # MCP server with tools
