@@ -65,7 +65,8 @@ def query_link_status(query: str) -> dict:
 
 @mcp_http_server.tool()
 def query_high_latency_request_percentage(service_id: str, time_window: int) -> dict | ErrorResponse:
-    """Reports the percentage of high latency requests on {service-id} in the last {time_window} hours"""
+    """Reports the percentage of high latency requests on {service-id} in the last {time_window} hours. """ \
+    """Returns the high latency requests percentage."""
 
     if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
         return { "high_latency_requests_percent": 98 }
@@ -76,7 +77,8 @@ def query_high_latency_request_percentage(service_id: str, time_window: int) -> 
 
 @mcp_http_server.tool()
 def query_average_request_latencies(service_id: str, time_window: int) -> RequestLatencies | ErrorResponse:
-    """Reports average request latencies on {service-id} in the last {time_window} hours """
+    """Reports average request latencies on {service-id} in the last {time_window} hours. """ \
+    """Returns the average storage, server, and end-to-end latencies."""
 
     if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
         return RequestLatencies(
@@ -90,7 +92,8 @@ def query_average_request_latencies(service_id: str, time_window: int) -> Reques
 
 @mcp_http_server.tool()
 def query_service_info(service_id: str) -> ServiceInfo | ErrorResponse:
-    """Reports information on {service-id} """
+    """Reports information on {service-id}. """ \
+    """Returns the service type, account ID, deployment ID."""
 
     if service_id == "d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e":
         return ServiceInfo(
@@ -104,7 +107,8 @@ def query_service_info(service_id: str) -> ServiceInfo | ErrorResponse:
 
 @mcp_http_server.tool()
 def query_deployment_info(deployment_id: str) -> DeploymentInfo | ErrorResponse:
-    """Reports information on {deployment_id}"""
+    """Reports information on {deployment_id}. """ \
+    """Returns VM type, role instance count, subscription ID."""
 
     if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
         return DeploymentInfo(
@@ -118,7 +122,8 @@ def query_deployment_info(deployment_id: str) -> DeploymentInfo | ErrorResponse:
 
 @mcp_http_server.tool()
 def query_average_cpu_load(deployment_id: str, time_window: int) -> dict | ErrorResponse:
-    """Reports the average CPU load on {deployment-id} in the last {time_window} hours"""
+    """Reports the average CPU load on {deployment-id} in the last {time_window} hours. """ \
+    """Returns the average CPU load percentage."""
 
     if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
         return { "average_cpu_load_percent": 98 }
@@ -129,7 +134,8 @@ def query_average_cpu_load(deployment_id: str, time_window: int) -> dict | Error
 
 @mcp_http_server.tool()
 def query_average_requests_per_sec(deployment_id: str, time_window: int) -> dict | ErrorResponse:
-    """Reports the average requests per second on {deployment-id} in the last {time_window} hours"""
+    """Reports the average requests per second on {deployment-id} in the last {time_window} hours. """ \
+    """Returns the average requests per second."""
 
     if deployment_id == "f3c9a7e2-8b4d-4f6a-9c2e-7d1b3a6e5c9f":
         return { "average_requests_per_second": 500 }

@@ -31,7 +31,7 @@ Steps:
     5b. If storage latency is more than 50% of end-to-end latency then report root cause as "high latency caused by storage"
     6. Get {deployment-id} where {service-id} is running
     7. Get average CPU load of {deployment-id} in the last hour
-    8. If CPU load is above 90% then go to "High CPU usage in {deployment-id} diagnostic" KB article
+    8. If CPU load is above 90% then query failure analysis KB for "High CPU usage in {deployment-id} diagnostic" KB article to determine root cause
     9. Otherwise report root cause as "unable to determine cause of high latency"
 """,
 """

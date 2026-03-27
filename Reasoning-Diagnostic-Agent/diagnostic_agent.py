@@ -33,21 +33,27 @@ def get_llm(name: str|None) -> ChatOllama:
         )
 
 
-def get_llm_prompt(query: str) -> str:
+def get_llm_prompt(query_str: str) -> str:
     return f"""
     You are a helpful assistant. Answer the following query
     by only using the tools provided to you. DO NOT make up any information.
-    Query failure analysis KB first to make a plan on how to derive the
-    response. Then execute the plan until root cause is determined for response.
-    Do not repeat tool calls with the same query.
+
+    Query failure analysis KB with the full query_str as input first, and
+    from the KB response make a plan on how to derive the root cause using
+    the tools available. The plan MUST NOT include tool calls not required
+    by the KB response steps. Then execute the plan until root cause is
+    determined for final response. Do not repeat tool calls with the same
+    input parameters.
 
     If the result of a step in the plan indicates a new KB query is needed
-    for root causing the issue then you MUST perform the new failure analysis KB query
-    and make a new plan to derive the root cause response. DO NOT finish before
-    the root cause is determined, unless the conclusion is "unable to determine
-    root cause".
+    for root causing the issue then you MUST perform the new failure analysis
+    KB query and make a new plan to derive the root cause response. DO NOT
+    finish before the root cause is determined, unless the conclusion is
+    "unable to determine root cause". If the root cause is determined,
+    the final response should include the main backing data obtained during
+    execution of the plan.
 
-    Query: {query}
+    Query: {query_str}
     """
 
 async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NORMAL) -> str:

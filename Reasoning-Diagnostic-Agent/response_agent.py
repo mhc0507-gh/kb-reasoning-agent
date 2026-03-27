@@ -139,7 +139,7 @@ async def compare_agent_LLM(response: str, reference_response: str, model:str) -
     messages = [("human", get_similarity_evaluator_prompt(response, reference_response))]
 
     llm = ChatOllama(
-        model=model,
+        model=model or "gpt-oss:20b",
         verbose=True
         )
 

@@ -8,7 +8,8 @@ diagnostic_kb = DiagnosticKB()
 
 @mcp_local_server.tool()
 def failure_analysis_kb(query: str):
-    """Knowledge base for procedures on how to diagnose issues."""
+    """Knowledge base for procedures on how to diagnose issues. """ \
+    """Returns a string listing steps for diagnosing the issue."""
     return diagnostic_kb.query_rag(query)
 
 @mcp_local_server.prompt()
