@@ -94,3 +94,12 @@ LLM_similarity_score Mean: 68.00 ± 9.17
 ST_similarity_score Mean: 56.15 ± 2.55
 
 Total elapsed time: 112.5 minutes
+
+
+## qwen3.5:4b
+
+| Iteration # | Diagnostic_elapsed_time (s) | LLM_similarity_score | ST_similarity_score |
+|------------:|----------------------------:|---------------------:|--------------------:|
+|           1 |                         551 |                  100 |                  56 |
+
+Total elapsed time: 31.4 minutes

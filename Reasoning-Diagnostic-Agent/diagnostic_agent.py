@@ -15,6 +15,7 @@ from tool_trace import ToolTrace
 
 gpt_model = { "name": "gpt-oss:20b", "reasoning": True }
 granite_model = { "name": "granite4:32b-a9b-h", "reasoning": False }
+qwen_model = { "name": "qwen3.5:4b", "reasoning": True }
 
 def get_llm(name: str|None) -> ChatOllama:
     match name:
@@ -22,6 +23,8 @@ def get_llm(name: str|None) -> ChatOllama:
             selected_model = gpt_model
         case "granite4:32b-a9b-h":
             selected_model = granite_model
+        case "qwen3.5:4b":
+            selected_model = qwen_model
         case _:
             selected_model = gpt_model
 

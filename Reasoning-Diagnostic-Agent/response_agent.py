@@ -136,6 +136,9 @@ async def compare_agent_LLM(response: str, reference_response: str, model:str) -
     print("    ---------")
     print(reference_response)
 
+    if not response:
+      return '{"score": 0, "missing_details": ["all details missing"], "explanation": "response was empty, no details included}'
+
     messages = [("human", get_similarity_evaluator_prompt(response, reference_response))]
 
     llm = ChatOllama(
