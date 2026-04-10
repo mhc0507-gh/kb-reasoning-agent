@@ -62,6 +62,40 @@ ST_similarity_score Mean: 60.55 ± 2.52
 Total elapsed time: 111.7 minutes
 
 
+## gemma4:e4b
+
+| Iteration # | Diagnostic_elapsed_time (s) | LLM_similarity_score | ST_similarity_score |
+|------------:|----------------------------:|---------------------:|--------------------:|
+|           1 |                         552 |                  100 |                  50 |
+|           2 |                         528 |                  100 |                  46 |
+|           3 |                         466 |                  100 |                  46 |
+|           4 |                         325 |                    0 |                  42 |
+|           5 |                         441 |                  100 |                  41 |
+|           6 |                         395 |                  100 |                  49 |
+|           7 |                         518 |                  100 |                  47 |
+|           8 |                         611 |                  100 |                  51 |
+|           9 |                         428 |                  100 |                  45 |
+|          10 |                         464 |                  100 |                  46 |
+|          11 |                         497 |                  100 |                  56 |
+|          12 |                         431 |                  100 |                  52 |
+|          13 |                         419 |                  100 |                  43 |
+|          14 |                         447 |                  100 |                  40 |
+|          15 |                         441 |                  100 |                  42 |
+|          16 |                         505 |                  100 |                  44 |
+|          17 |                         400 |                   80 |                  44 |
+|          18 |                         565 |                  100 |                  42 |
+|          19 |                         403 |                  100 |                  51 |
+|          20 |                         419 |                  100 |                  41 |
+
+Diagnostic_elapsed_time (s) Mean: 462.75 ± 29.99
+
+LLM_similarity_score Mean: 94.00 ± 9.89
+
+ST_similarity_score Mean: 45.90 ± 1.92
+
+Total elapsed time: 197.7 minutes
+
+
 ## granite4:32b-a9b-h
 
 | Iteration # | Diagnostic_elapsed_time (s) | LLM_similarity_score | ST_similarity_score |
