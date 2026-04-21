@@ -30,13 +30,20 @@ class DiagnosticAgentExecutor(AgentExecutor):
         print("model: ", user_input.get("model"))
         print("prompt received: ", user_input.get("prompt"))
         # Call the diagnostic agent function
-        result = await diagnostic_agent.query_agent(
+        result, input_tokens, output_tokens = await diagnostic_agent.query_agent(
                         prompt=user_input.get("prompt"),
                         model=user_input.get("model"),
                         log_level=user_input.get("log_level"))
 
         print("Result received: ", result)
-        await event_queue.enqueue_event(new_agent_text_message(result))
+        message = new_agent_text_message(result)
+
+        if message.metadata is None:
+            message.metadata = {}
+        message.metadata["input_tokens"] = input_tokens
+        message.metadata["output_tokens"] = output_tokens
+
+        await event_queue.enqueue_event(message)
 
     @override
     async def cancel(

@@ -52,7 +52,7 @@ async def execute_a2a_agent(agent_card_url: str,
                             user: str,
                             prompt: str | list[str | dict],
                             model: str | None = None,
-                            log_level=ToolTrace.NORMAL) -> str:
+                            log_level=ToolTrace.NORMAL) -> tuple[str, int]:
 
     print("Retrieving agent card at ", agent_card_url)
     async with httpx.AsyncClient(timeout=600) as httpx_client:
@@ -102,9 +102,17 @@ async def execute_a2a_agent(agent_card_url: str,
         if response is None:
             raise RuntimeError("No response received from agent")
 
-        # Extract text from the response Message object
         if not isinstance(response, Message):
             raise RuntimeError("Response is not a message")
+
+        # Get metadata
+        total_tokens = 0
+        if isinstance(response.metadata, dict):
+            input_tokens = int(response.metadata.get("input_tokens", "0"))
+            output_tokens = int(response.metadata.get("output_tokens", "0"))
+            total_tokens = input_tokens + output_tokens
+
+        # Extract text from the response Message object
         if not response.parts or len(response.parts) == 0:
             raise RuntimeError("Response message has no parts")
 
@@ -112,7 +120,7 @@ async def execute_a2a_agent(agent_card_url: str,
         first_part = response.parts[0]
         if isinstance(first_part.root, TextPart):
             if hasattr(first_part.root, 'text') and first_part.root.text is not None:
-                return first_part.root.text
+                return first_part.root.text, total_tokens
             else:
                 raise RuntimeError("Part does not have a text attribute")
         else:
@@ -146,7 +154,7 @@ class DiagnosticAgent:
         prompt = messages[0].content
 
         start_time = time.time()
-        response = asyncio.run(execute_a2a_agent(
+        response, total_tokens = asyncio.run(execute_a2a_agent(
             agent_card_url="http://localhost:9001/",
             user="",
             prompt=prompt,
@@ -154,22 +162,24 @@ class DiagnosticAgent:
             log_level=ToolTrace.VERBOSE
         ))
         end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Elapsed time for execute_a2a_agent: {elapsed_time:.2f} seconds")
+        elapsed_time = f"{(end_time - start_time):.2f}"
+        print(f"Elapsed time for execute_a2a_agent: {elapsed_time} seconds")
 
-        return {"messages": [AIMessage(content=[{"Diagnostic_elapsed_time":elapsed_time}, response])]}
+        return {"messages": [AIMessage(content=[{"Diagnostic_elapsed_time":elapsed_time, "Total_tokens":total_tokens}, response])]}
 
     def response_agent_node(self, state: DiagnosticAgentState):
         messages = state["messages"]
 
         # Get diagnostic elapsed time and AI contents
-        diagnostic_elapsed_time = 0
+        diagnostic_elapsed_time = ""
+        total_tokens = ""
         ai_contents = ""
         if messages and isinstance(messages[1], AIMessage):
             content = messages[1].content
             if isinstance(content, list):
                 if len(content) > 0 and isinstance(content[0], dict):
-                    diagnostic_elapsed_time = int(content[0].get("Diagnostic_elapsed_time", 0))
+                    diagnostic_elapsed_time = content[0].get("Diagnostic_elapsed_time", "")
+                    total_tokens = content[0].get("Total_tokens", "")
                 if len(content) > 1 and isinstance(content[1], str):
                     ai_contents = content[1]
 
@@ -213,7 +223,8 @@ class DiagnosticAgent:
         return {"messages": [AIMessage(content=[
             {"Diagnostic_elapsed_time":diagnostic_elapsed_time},
             {"LLM_similarity_score":LLM_similarity_score},
-            {"ST_similarity_score":ST_similarity_score}])]}
+            {"ST_similarity_score":ST_similarity_score},
+            {"Total_tokens":total_tokens}])]}
 
 
 if __name__ == '__main__':
@@ -244,6 +255,7 @@ if __name__ == '__main__':
     elapsed_time = []
     scores_llm = []
     scores_st = []
+    total_tokens = []
 
     start_time = time.time()
     iterations = int(args.iterations)
@@ -257,6 +269,7 @@ if __name__ == '__main__':
         elapsed_time.append(response_data[0].get("Diagnostic_elapsed_time"))
         scores_llm.append(response_data[1].get("LLM_similarity_score"))
         scores_st.append(response_data[2].get("ST_similarity_score"))
+        total_tokens.append(response_data[3].get("Total_tokens"))
 
     end_time = time.time()
     total_elapsed_time = (end_time - start_time)/60
@@ -264,7 +277,8 @@ if __name__ == '__main__':
     print("----------------------------------------")
     print_stats(["Diagnostic_elapsed_time (s)",
                  "LLM_similarity_score",
-                 "ST_similarity_score"],
-                [elapsed_time, scores_llm, scores_st])
+                 "ST_similarity_score",
+                 "Total_tokens"],
+                [elapsed_time, scores_llm, scores_st, total_tokens])
 
     print(f"\nTotal elapsed time: {total_elapsed_time:.1f} minutes")

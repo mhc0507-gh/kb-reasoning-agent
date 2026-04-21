@@ -35,6 +35,7 @@ def get_llm(name: str|None) -> ChatOllama:
         model=selected_model["name"],
         reasoning=selected_model["reasoning"],
         disable_streaming=True,
+        temperature=1.0,
         verbose=True
         )
 
@@ -62,7 +63,7 @@ def get_llm_prompt(query_str: str) -> str:
     Query: {query_str}
     """
 
-async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NORMAL) -> str:
+async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NORMAL) -> tuple[str, int, int]:
     # MCP server that runs locally communicating through STDIO
     mcp_local_server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "MCP_local_server.py"))
     print(f"MCP local server path: {mcp_local_server_path}")
@@ -106,13 +107,22 @@ async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NOR
                         print(f"\nAnswering query : {prompt}")
                         agent_response = await agent.ainvoke(input={"messages": llm_prompt}, config=config)
 
-                        return agent_response["messages"][-1].content
+                        # Collect token usage info
+                        input_tokens = 0
+                        output_tokens = 0
+                        for agent_message in agent_response["messages"]:
+                            if "prompt_eval_count" in agent_message.response_metadata:
+                                input_tokens += int(agent_message.response_metadata.get("prompt_eval_count"))
+                            if "eval_count" in agent_message.response_metadata:
+                                output_tokens += int(agent_message.response_metadata.get("eval_count"))
+
+                        return agent_response["messages"][-1].content, input_tokens, output_tokens
 
             except Exception as e:
                 print(f"Error: {e}")
                 if isinstance(e, ExceptionGroup):
                     print(f"{e.exceptions}")
-                return "Error"
+                return "Error", 0, 0
 
     return "Error"
 
