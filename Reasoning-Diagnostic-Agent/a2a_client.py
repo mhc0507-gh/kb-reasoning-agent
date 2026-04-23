@@ -52,6 +52,7 @@ async def execute_a2a_agent(agent_card_url: str,
                             user: str,
                             prompt: str | list[str | dict],
                             model: str | None = None,
+                            temperature: float | None = None,
                             log_level=ToolTrace.NORMAL) -> tuple[str, int]:
 
     print("Retrieving agent card at ", agent_card_url)
@@ -83,7 +84,7 @@ async def execute_a2a_agent(agent_card_url: str,
 
         print("A2AClient initialized.")
 
-        input_dict = {"user": user, "prompt": prompt, "model": model, "log_level": log_level}
+        input_dict = {"user": user, "prompt": prompt, "model": model, "temperature": temperature, "log_level": log_level}
 
         message = Message(
             role=Role("user"),
@@ -132,8 +133,9 @@ class DiagnosticAgentState(TypedDict):
 
 class DiagnosticAgent:
 
-    def __init__(self, model: str, reference_response: str) -> None:
+    def __init__(self, model: str|None, temperature: float|None, reference_response: str) -> None:
         self.model = model
+        self.temperature = temperature
         self.reference_response = reference_response
 
         diag_graph = StateGraph(DiagnosticAgentState)
@@ -159,6 +161,7 @@ class DiagnosticAgent:
             user="",
             prompt=prompt,
             model=self.model,
+            temperature=self.temperature,
             log_level=ToolTrace.VERBOSE
         ))
         end_time = time.time()
@@ -236,6 +239,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--iterations", default="1")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--temperature", default=None)
 
     args = parser.parse_args()
 
@@ -247,7 +251,7 @@ if __name__ == '__main__':
         * The origin service is over-loaded with too many requests
     """
 
-    diag_agent = DiagnosticAgent(args.model, reference_response)
+    diag_agent = DiagnosticAgent(args.model, args.temperature, reference_response)
 
     diag_prompt = "What is the cause of alert 'Origin service d3f1a8b2-7c4e-4f9e-9e2a-8b6c3a2d1f4e with high latency on more than 90% of requests in the last hour'"
     user_message: DiagnosticAgentState = {"messages": [HumanMessage(diag_prompt)]}
@@ -266,19 +270,24 @@ if __name__ == '__main__':
         print(f"\nAGENT #{i}: {ai_response["messages"][-1].content}")
 
         response_data = ai_response["messages"][-1].content
-        elapsed_time.append(response_data[0].get("Diagnostic_elapsed_time"))
+        elapsed_time.append(float(response_data[0].get("Diagnostic_elapsed_time")))
         scores_llm.append(response_data[1].get("LLM_similarity_score"))
         scores_st.append(response_data[2].get("ST_similarity_score"))
-        total_tokens.append(response_data[3].get("Total_tokens"))
+        total_tokens.append(int(response_data[3].get("Total_tokens")))
 
     end_time = time.time()
     total_elapsed_time = (end_time - start_time)/60
 
-    print("----------------------------------------")
+    print("\n----------------------------------------")
+    if args.model:
+        print(f"Model: {args.model}")
+    if args.temperature:
+        print(f"Temperature: {args.temperature}")
+
     print_stats(["Diagnostic_elapsed_time (s)",
                  "LLM_similarity_score",
                  "ST_similarity_score",
                  "Total_tokens"],
                 [elapsed_time, scores_llm, scores_st, total_tokens])
 
-    print(f"\nTotal elapsed time: {total_elapsed_time:.1f} minutes")
+    print(f"\nTotal elapsed time: {total_elapsed_time:.1f} minutes\n")

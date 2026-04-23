@@ -18,7 +18,7 @@ granite_model = { "name": "granite4:32b-a9b-h", "reasoning": False }
 qwen_model = { "name": "qwen3.5:4b", "reasoning": True }
 gemma_model = { "name": "gemma4:e4b", "reasoning": True }
 
-def get_llm(name: str|None) -> ChatOllama:
+def get_llm(name: str|None, temperature: float|None) -> ChatOllama:
     match name:
         case "gpt-oss:20b":
             selected_model = gpt_model
@@ -35,7 +35,7 @@ def get_llm(name: str|None) -> ChatOllama:
         model=selected_model["name"],
         reasoning=selected_model["reasoning"],
         disable_streaming=True,
-        temperature=1.0,
+        temperature=temperature,
         verbose=True
         )
 
@@ -63,7 +63,7 @@ def get_llm_prompt(query_str: str) -> str:
     Query: {query_str}
     """
 
-async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NORMAL) -> tuple[str, int, int]:
+async def query_agent(prompt: str, model: str|None=None, temperature: float|None=None, log_level=ToolTrace.NORMAL) -> tuple[str, int, int]:
     # MCP server that runs locally communicating through STDIO
     mcp_local_server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "MCP_local_server.py"))
     print(f"MCP local server path: {mcp_local_server_path}")
@@ -93,7 +93,7 @@ async def query_agent(prompt: str, model: str|None=None, log_level=ToolTrace.NOR
                         mcp_server_tools = await load_mcp_tools(http_session)
                         mcp_server_tools += await load_mcp_tools(stdio_session)
 
-                        llm = get_llm(model)
+                        llm = get_llm(model, temperature)
                         llm_prompt = get_llm_prompt(prompt)
 
                         print("\nTools loaded :")
