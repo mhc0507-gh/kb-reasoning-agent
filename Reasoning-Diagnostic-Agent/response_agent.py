@@ -127,7 +127,7 @@ REFERENCE string:
     """
 
 
-async def compare_agent_LLM(response: str, reference_response: str, model:str) -> str:
+async def compare_agent_LLM(response: str, reference_response: str, model:str|None) -> str:
     print("🤖 Evaluating similarity with LLM")
     print("    Response")
     print("    --------")
