@@ -17,6 +17,7 @@ gpt_model = { "name": "gpt-oss:20b", "reasoning": True }
 granite_model = { "name": "granite4:32b-a9b-h", "reasoning": False }
 qwen_model = { "name": "qwen3.5:4b", "reasoning": True }
 gemma_model = { "name": "gemma4:e4b", "reasoning": True }
+lfm2_model = { "name": "lfm2:24b", "reasoning": False }
 
 def get_llm(name: str|None, temperature: float|None) -> ChatOllama:
     match name:
@@ -28,6 +29,8 @@ def get_llm(name: str|None, temperature: float|None) -> ChatOllama:
             selected_model = qwen_model
         case "gemma4:e4b":
             selected_model = gemma_model
+        case "lfm2:24b":
+            selected_model = lfm2_model
         case _:
             selected_model = gpt_model
 

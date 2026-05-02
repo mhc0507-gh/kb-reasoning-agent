@@ -437,9 +437,9 @@ if __name__ == '__main__':
 
         response_data = ai_response["messages"][-1].content
         elapsed_time.append(float(response_data[0].get("Diagnostic_elapsed_time")))
-        scores_llm.append(response_data[1].get("LLM_similarity_score"))
-        scores_st.append(response_data[2].get("ST_similarity_score"))
-        total_tokens.append(int(response_data[3].get("Total_tokens")))
+        scores_llm.append(response_data[0].get("LLM_similarity_score"))
+        scores_st.append(response_data[0].get("ST_similarity_score"))
+        total_tokens.append(int(response_data[0].get("Total_tokens")))
 
     end_time = time.time()
     total_elapsed_time = (end_time - start_time)/60
